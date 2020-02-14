@@ -1,0 +1,206 @@
+---
+title: "847A2 Q2"
+output: pdf_document
+---
+## 1
+a.
+*(3 marks)* Mathematically show that the random variable $W$ defined
+\[W = Q_X(F_X(a) + U \times (F_X(b) - F_X(a))) \]
+where $U$ is a uniform random variable $U \sim U(0,1)$ has the same distribution as $Y$.
+
+$F_w(t)$ $=$ $Pr(Q_x(F_x(a) + U(F_x(b) - F_x(a))) <=t)$
+         
+  $=$ $Pr(Q_x^-1(Q_x(F_x(a) + U(F_x(b) - F_x(a))))) <= Q^-1(t)$
+         
+  $=$ $Pr(F_x(a) + U(F_x(b) - F_x(a))) <= F_x(t)$
+         
+  $=$ $Pr(U <= \frac{F_x(t) - F_x(a)}{F_x(b) - F_x(a)}) <= F_x(t)$
+         
+  $=$ $F_U(\frac{F_x(t) - F_x(a)}{F_x(b) - F_x(a)}) <= F_x(t)$
+         
+  $0$ $,$ $\frac{F_x(t) - F_x(a)}{F_x(b) - F_x(a)} <= 0$
+  
+  $\frac{F_x(t) - F_x(a)}{F_x(b) - F_x(a)}$, $0<= \frac{F_x(t) - F_x(a)}{F_x(b) - F_x(a)} <=1$
+  
+  $1$ $,$ $\frac{F_x(t) - F_x(a)}{F_x(b) - F_x(a)} >=1$
+  
+  $=>$ 
+  
+  $0$ $,$ $F_x(t) < F_x(a)$
+  
+  $\frac{F_x(t) - F_x(a)}{F_x(b) - F_x(a)}$, $F_x(a) <=F_x(t)<=F_x(b)$
+  
+  $1, F_x(t) > F_x(b)$
+  
+  $=>$ 
+  
+  $0$ $,$ $t<=a$ $t < a$
+  
+  $\frac{F_x(t) - F_x(a)}{F_x(b) - F_x(a)}$, $a <=t<=b$
+  
+  $1, t > b$
+
+b.
+ *(15 marks)* Here you are to write a function `truncate()` of the form 
+          
+         ```{r createTruncated, eval = FALSE}
+          truncate <- function(ddist = dnorm, pdist = pnorm, 
+                               qdist = qnorm, a = -inf, b = inf) {
+                                # your code here
+                                }
+         ```
+         where `ddist`, `pdist`, and `qdist` refer to functions which  calculate the density $f_X(x)$, distribution (cumulative probability) $F_X(x)$, and quantiles $Q_X(p)$, for the input distribution of the random variable $X$.  The arguments $a$ and $b$ ($a < b$) are the truncation points.  Note that `-inf` and `inf` are representations in \R of $-\infty$ and $+\infty$, respectively.  Your code will need to be able to handle all cases correctly.
+         
+         The function `truncate()` is to return a list with components named `ddist`, `pdist` and `rdist` containing functions which can be called  to produce the density $g_Y(y)$, distribution $G_Y(y)$, and any number of pseudo-random observations from the distribution of $Y$.
+         
+         That is, the following should work for the half-normal distribution.
+         
+         ```{r truncated results, eval = FALSE}
+         half_normal <- truncate(a = 0)
+         xsample <- half_normal$rdist(300)
+         x <- seq(-3, 3, 0.01)
+         fx <- half_normal$ddist(x)
+         Fx <- half_normal$pdist(x)
+         oldPar <- par(mfrow = c(1,3))
+         plot(x, fx, type = "l", main = "Half normal density")
+         plot(x, Fx, type = "l", main = "Half normal distribution")
+         hist(xsample, main = "Half normal sample")
+         par(oldPar)
+         ```
+         Hand in the above plots with your code.
+
+
+```{r}
+truncate<-function(ddist=dnorm,pdist=pnorm,qdist=qnorm,a=-Inf,b=Inf){
+
+a1<-function(x){
+  l=c()
+  for(i in x){
+    if(i<a || i>b){
+    l<-append(l,0)}
+    else{
+      l<-append(l,(ddist(i)/(ddist(b)-ddist(a))))}
+  }
+  return (l)
+}
+
+b1<-function(x){
+  l=c()
+  for(i in x){
+    if(i<a){
+      l<-append(l,0)}
+    else if(i>b){
+      l<-append(l,1)}
+    else{
+       l<-append(l,(pdist(i)-pdist(a))/(pdist(b)-pdist(a)))}
+  }
+  return (l)
+}
+
+w=c()
+c1<-function(x){
+  l=c()
+  u<-runif(x,min=0,max=1)
+  w=pdist(a)+(u*(pdist(b)-pdist(a)))
+  l<-qdist(w)
+  return (l)
+}
+
+return(list(ddist=a1,pdist=b1,rdist=c1))
+}
+```
+
+```{r}
+half_normal <- truncate(a = 0)
+xsample <- half_normal$rdist(300)
+x <- seq(-3, 3, 0.01)
+fx <- half_normal$ddist(x)
+Fx <- half_normal$pdist(x)
+```
+
+```{r}
+oldPar <- par(mfrow = c(1,3))
+plot(x, fx, type = "l", main = "Half normal density")
+plot(x, Fx, type = "l", main = "Half normal distribution")
+hist(xsample, main = "Half normal sample")
+par(oldPar)
+```
+
+c.
+The distributions of humour between men and women seems to be significantly different but what does that actually say?  To get some idea, suppose we take the results to mean that the measure of humour ability for men is $Y \sim N(0.09, (0.49)^2)$ and the same for women is $X \sim N(-0.09, (0.49)^2)$.
+
+i.
+*(3 marks)* On a single (nicely labelled with a legend) draw the densities (in different colours) for both men and women.
+```{r}
+m<-dnorm(seq(-4,4,0.05),mean=0.09, sd=0.49)
+w<-dnorm(seq(-4,4,0.05),mean= -0.09, sd=0.49)
+plot(m,col="purple")
+par(new=TRUE)
+plot(w,col="pink")
+legend("topright", lty=c(1,2,1,2), col=c("purple", "pink"), legend = c("men", "women")
+)
+```
+ii.
+*(4 marks)* Generate a random sample of 1000 scores from each of these distributions and save the values on `x` for women, `y` for men, and `results <- data.frame(women = x, men = y)`.  We now have paired results as if in each row, we randomly drew one women and one man and measured their "humour ability".
+         
+             Based on your sample, estimate the following
+             
+             - the average humour ability of the men
+             - the average humour ability of the women
+             - the probability that the man will be funnier than the woman (at least as measured by this scale).
+```{r}
+x = rnorm(runif(1000),-0.09, 0.49)
+y = rnorm(runif(1000),0.09, 0.49)
+results <- data.frame(women = x, men = y)
+
+mean(x) 
+mean(y)
+mean(results$men>results$women)
+```
+iii.
+Suppose that to be really funny (e.g. professional standup comedian) requires a humour ability measure of at least 1.07 (two standard deviations past the mean of the males)
+         
+              Generate 1000 pseudo random scores `y` from the truncated distribution for men and another 1000 `x` from the truncated distribution for women.  Form the data frame `funny <- data.frame(women = x, men = y)` and based on this paired sample, estimate the following
+             
+                 - the average humour ability of the men
+                 - the average humour ability of the women
+                 - the probability that the man will be funnier than the woman (at least as measured by this scale).
+
+```{r}
+z1<-truncate(ddist = function (x) dnorm(x, mean=0.09, sd=0.49),
+             pdist = function (x) pnorm(x, mean=0.09, sd=0.49),
+             qdist = function (x) qnorm(x, mean=0.09, sd=0.49),a=1.07)
+
+x=z1$rdist(1000)
+
+z2<-truncate(ddist = function (x) dnorm(x, mean=-0.09, sd=0.49),
+             pdist = function (x) pnorm(x, mean=-0.09, sd=0.49),
+             qdist = function (x) qnorm(x, mean=-0.09, sd=0.49),a=1.07)
+y=z2$rdist(1000)
+funny <- data.frame(women = x, men = y)
+mean(x) 
+mean(y)
+mean(funny$men>funny$women)
+```
+iv.
+*(2 marks)* What conclusions do you draw about the differences between the humour of men and women?
+From parts ii and iii, we can see that men has a higher average humour than women.
+
+v.
+*(4 marks)* Repeat part iii, again conditioning on considering only individuals with a "humour ability" score of at least 1.07.   Except now, assume that the means of the female and male score distributions are identical at 0.09 **but** that the standard deviation for the men is 10\% larger for than that for the women (0.049).
+```{r}
+z1<-truncate(ddist = function (x) dnorm(x, mean=0.09, sd=0.49),
+             pdist = function (x) pnorm(x, mean=0.09, sd=0.49),
+             qdist = function (x) qnorm(x, mean=0.09, sd=0.49),a=1.07)
+
+x=z1$rdist(1000)
+
+z2<-truncate(ddist = function (x) dnorm(x, mean=-0.09, sd=0.539),
+             pdist = function (x) pnorm(x, mean=-0.09, sd=0.539),
+             qdist = function (x) qnorm(x, mean=-0.09, sd=0.539),a=1.07)
+y=z2$rdist(1000)
+funny <- data.frame(women = x, men = y)
+mean(x) 
+mean(y)
+mean(funny$men>funny$women)
+```
